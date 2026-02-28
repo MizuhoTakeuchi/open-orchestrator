@@ -37,6 +37,7 @@ class Config(BaseModel):
     llm: LLMConfig = Field(default_factory=LLMConfig)
     permissions: PermissionsConfig = Field(default_factory=PermissionsConfig)
     agent: AgentConfig = Field(default_factory=AgentConfig)
+    working_dir: Path = Field(default_factory=Path.cwd)
 
 
 def load_config(config_path: Path | None = None) -> Config:

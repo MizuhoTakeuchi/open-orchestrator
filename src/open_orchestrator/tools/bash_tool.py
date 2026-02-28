@@ -3,21 +3,28 @@
 from __future__ import annotations
 
 import asyncio
-import subprocess
+from pathlib import Path
 
 from open_orchestrator.tools import Tool, register_tool
 
 DEFAULT_TIMEOUT = 30
 
 
-async def bash(command: str, timeout: int = DEFAULT_TIMEOUT, cwd: str | None = None) -> str:
+async def bash(
+    command: str,
+    timeout: int = DEFAULT_TIMEOUT,
+    cwd: str | None = None,
+    *,
+    working_dir: Path,
+) -> str:
     """Execute a shell command and return its output."""
+    effective_cwd = cwd if cwd is not None else str(working_dir)
     try:
         proc = await asyncio.create_subprocess_shell(
             command,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            cwd=cwd,
+            cwd=effective_cwd,
         )
         try:
             stdout, stderr = await asyncio.wait_for(
@@ -50,7 +57,7 @@ async def bash(command: str, timeout: int = DEFAULT_TIMEOUT, cwd: str | None = N
         return f"Error executing command: {e}"
 
 
-def register_bash_tool() -> None:
+def register_bash_tool(working_dir: Path) -> None:
     """Register the bash tool into the global registry."""
     register_tool(Tool(
         name="bash",
@@ -73,11 +80,11 @@ def register_bash_tool() -> None:
                 },
                 "cwd": {
                     "type": "string",
-                    "description": "Working directory for the command (default: current directory)",
+                    "description": "Working directory for the command (default: project working directory)",
                 },
             },
             "required": ["command"],
         },
-        handler=bash,
+        handler=lambda **kwargs: bash(**kwargs, working_dir=working_dir),
         requires_permission=True,
     ))

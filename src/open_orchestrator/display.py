@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from typing import Any
 
 from rich.console import Console
@@ -15,12 +16,16 @@ from rich.text import Text
 console = Console()
 
 
-def print_welcome() -> None:
+def print_welcome(working_dir: Path | None = None) -> None:
     """Print welcome banner."""
+    working_line = ""
+    if working_dir is not None:
+        working_line = f"\n[dim]Working in:[/dim] [bold]{working_dir}[/bold]\n"
     console.print(
         Panel(
             "[bold cyan]Open Orchestrator[/bold cyan]\n"
-            "[dim]AI orchestrator for local LLMs[/dim]\n\n"
+            "[dim]AI orchestrator for local LLMs[/dim]\n"
+            f"{working_line}\n"
             "Type your message, or use /help for commands.\n"
             "Press [bold]Ctrl+C[/bold] to interrupt, [bold]Ctrl+D[/bold] to exit.",
             border_style="cyan",

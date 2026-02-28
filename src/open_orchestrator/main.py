@@ -26,9 +26,10 @@ console = Console()
 
 def setup_tools(config: Config, permissions: PermissionManager) -> None:
     """Register all tools into the global registry."""
-    register_file_tools()
-    register_bash_tool()
-    register_search_tools()
+    working_dir = config.working_dir
+    register_file_tools(working_dir)
+    register_bash_tool(working_dir)
+    register_search_tools(working_dir)
 
     # Task tool is registered last as it depends on other components
     registry = get_registry()
@@ -63,6 +64,12 @@ def parse_args() -> argparse.Namespace:
         "--config",
         type=Path,
         help="Path to config.yaml",
+    )
+    parser.add_argument(
+        "-C",
+        "--working-dir",
+        type=Path,
+        help="Working directory for file operations (default: current directory)",
     )
     return parser.parse_args()
 
@@ -119,7 +126,7 @@ async def run_repl(agent: "Agent", permissions: PermissionManager, config: Confi
     """Run the interactive REPL loop."""
     from open_orchestrator import display
 
-    display.print_welcome()
+    display.print_welcome(config.working_dir)
 
     history_file = Path.home() / ".local" / "share" / "open-orchestrator" / "history"
     history_file.parent.mkdir(parents=True, exist_ok=True)
@@ -184,6 +191,8 @@ def main() -> None:
     config = load_config(args.config)
 
     # Apply CLI overrides
+    if args.working_dir:
+        config.working_dir = args.working_dir.resolve()
     if args.model:
         config.llm.model = args.model
     if args.base_url:

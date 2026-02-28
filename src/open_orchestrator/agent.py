@@ -33,6 +33,7 @@ class Agent:
         self.registry = registry
         self.permissions = permissions
         self.system_prompt = system_prompt or config.agent.system_prompt
+        self.system_prompt += f"\n\nWorking directory: {config.working_dir}"
         self.allowed_tools = allowed_tools  # None = all tools
         self.is_subagent = is_subagent
         self.messages: list[Message] = []

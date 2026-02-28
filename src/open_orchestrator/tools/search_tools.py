@@ -3,16 +3,23 @@
 from __future__ import annotations
 
 import fnmatch
-import os
 import re
 from pathlib import Path
 
 from open_orchestrator.tools import Tool, register_tool
 
 
-def glob(pattern: str, path: str = ".") -> str:
+def _resolve(path: str, working_dir: Path) -> Path:
+    """Resolve a path relative to working_dir. Absolute paths pass through."""
+    p = Path(path)
+    if p.is_absolute():
+        return p
+    return working_dir / p
+
+
+def glob(pattern: str, path: str = ".", *, working_dir: Path) -> str:
     """Find files matching a glob pattern."""
-    base_path = Path(path).resolve()
+    base_path = _resolve(path, working_dir).resolve()
     if not base_path.exists():
         return f"Error: Path does not exist: {path}"
 
@@ -37,9 +44,11 @@ def grep(
     file_pattern: str | None = None,
     case_sensitive: bool = True,
     context: int = 0,
+    *,
+    working_dir: Path,
 ) -> str:
     """Search for a pattern in files."""
-    base_path = Path(path).resolve()
+    base_path = _resolve(path, working_dir).resolve()
     if not base_path.exists():
         return f"Error: Path does not exist: {path}"
 
@@ -101,7 +110,7 @@ def grep(
     return output
 
 
-def register_search_tools() -> None:
+def register_search_tools(working_dir: Path) -> None:
     """Register all search tools into the global registry."""
     register_tool(Tool(
         name="glob",
@@ -119,13 +128,13 @@ def register_search_tools() -> None:
                 },
                 "path": {
                     "type": "string",
-                    "description": "Directory to search in (default: current directory)",
+                    "description": "Directory to search in (default: working directory)",
                     "default": ".",
                 },
             },
             "required": ["pattern"],
         },
-        handler=glob,
+        handler=lambda **kwargs: glob(**kwargs, working_dir=working_dir),
         requires_permission=False,
     ))
 
@@ -144,7 +153,7 @@ def register_search_tools() -> None:
                 },
                 "path": {
                     "type": "string",
-                    "description": "File or directory to search in (default: current directory)",
+                    "description": "File or directory to search in (default: working directory)",
                     "default": ".",
                 },
                 "file_pattern": {
@@ -164,6 +173,6 @@ def register_search_tools() -> None:
             },
             "required": ["pattern"],
         },
-        handler=grep,
+        handler=lambda **kwargs: grep(**kwargs, working_dir=working_dir),
         requires_permission=False,
     ))

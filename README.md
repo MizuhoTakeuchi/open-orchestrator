@@ -126,6 +126,7 @@ uv run open-orchestrator "カレントディレクトリのPythonファイルを
 uv run open-orchestrator [OPTIONS] [PROMPT]
 
 オプション:
+  -C, --working-dir DIR     作業ディレクトリを指定 (デフォルト: カレントディレクトリ)
   --model MODEL             モデル名 (config.yaml の設定を上書き)
   --base-url BASE_URL       API エンドポイント (config.yaml の設定を上書き)
   --mode {auto,ask,deny}    パーミッションモード (config.yaml の設定を上書き)
@@ -140,6 +141,9 @@ uv run open-orchestrator --model llama3.1-70b --base-url http://gpu-server:8000/
 
 # 全ツールを確認なしで自動実行するモード
 uv run open-orchestrator --mode auto "テストを実行して結果を報告して"
+
+# 任意のディレクトリを作業対象にして起動
+uv run open-orchestrator -C /path/to/project
 ```
 
 ---

@@ -7,9 +7,17 @@ from pathlib import Path
 from open_orchestrator.tools import Tool, register_tool
 
 
-def read_file(path: str, offset: int = 1, limit: int | None = None) -> str:
+def _resolve(path: str, working_dir: Path) -> Path:
+    """Resolve a path relative to working_dir. Absolute paths pass through."""
+    p = Path(path)
+    if p.is_absolute():
+        return p
+    return working_dir / p
+
+
+def read_file(path: str, offset: int = 1, limit: int | None = None, *, working_dir: Path) -> str:
     """Read a file and return its contents with line numbers."""
-    file_path = Path(path)
+    file_path = _resolve(path, working_dir)
     if not file_path.exists():
         return f"Error: File not found: {path}"
     if not file_path.is_file():
@@ -40,9 +48,9 @@ def read_file(path: str, offset: int = 1, limit: int | None = None) -> str:
     return header + "\n" + "\n".join(result_lines)
 
 
-def write_file(path: str, content: str) -> str:
+def write_file(path: str, content: str, *, working_dir: Path) -> str:
     """Create or overwrite a file with the given content."""
-    file_path = Path(path)
+    file_path = _resolve(path, working_dir)
     try:
         file_path.parent.mkdir(parents=True, exist_ok=True)
         file_path.write_text(content, encoding="utf-8")
@@ -52,9 +60,9 @@ def write_file(path: str, content: str) -> str:
         return f"Error writing file: {e}"
 
 
-def edit_file(path: str, old_string: str, new_string: str) -> str:
+def edit_file(path: str, old_string: str, new_string: str, *, working_dir: Path) -> str:
     """Edit a file by replacing old_string with new_string (must be unique)."""
-    file_path = Path(path)
+    file_path = _resolve(path, working_dir)
     if not file_path.exists():
         return f"Error: File not found: {path}"
 
@@ -80,7 +88,7 @@ def edit_file(path: str, old_string: str, new_string: str) -> str:
         return f"Error writing file: {e}"
 
 
-def register_file_tools() -> None:
+def register_file_tools(working_dir: Path) -> None:
     """Register all file tools into the global registry."""
     register_tool(Tool(
         name="read_file",
@@ -107,7 +115,7 @@ def register_file_tools() -> None:
             },
             "required": ["path"],
         },
-        handler=read_file,
+        handler=lambda **kwargs: read_file(**kwargs, working_dir=working_dir),
         requires_permission=False,
     ))
 
@@ -128,7 +136,7 @@ def register_file_tools() -> None:
             },
             "required": ["path", "content"],
         },
-        handler=write_file,
+        handler=lambda **kwargs: write_file(**kwargs, working_dir=working_dir),
         requires_permission=True,
     ))
 
@@ -157,6 +165,6 @@ def register_file_tools() -> None:
             },
             "required": ["path", "old_string", "new_string"],
         },
-        handler=edit_file,
+        handler=lambda **kwargs: edit_file(**kwargs, working_dir=working_dir),
         requires_permission=True,
     ))
