@@ -1,0 +1,21 @@
+# Pythonキャッシュファイル
+**/__pycache__/**
+*.pyc
+*.pyo
+*.pyd
+
+# 環境ファイル
+venv/
+env/
+.venv/
+.env
+.env.local
+
+# ログファイル
+logs/
+*.log
+*.out
+
+# エディタ設定
+.vscode/
+.claude/
